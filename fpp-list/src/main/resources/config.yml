@@ -1,0 +1,10 @@
+enabled: true
+
+bot-tab-list:
+  enabled: true
+  sync-interval-ticks: 40
+
+server-player-list:
+  enabled: true
+  count-bots: true
+  include-remote-bots: false

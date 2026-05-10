@@ -1,0 +1,10 @@
+enabled: true
+
+migration:
+  import-core-groups: true
+
+permissions:
+  command: fpp.settings
+
+messages:
+  prefix: "&8[&bFPP Groups&8]&r "

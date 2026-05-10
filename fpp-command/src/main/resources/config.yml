@@ -1,0 +1,5 @@
+enabled: true
+
+permissions:
+  command: fpp.cmd.admin
+  legacy: fpp.cmd

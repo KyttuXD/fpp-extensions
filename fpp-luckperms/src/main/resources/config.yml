@@ -1,0 +1,7 @@
+enabled: true
+
+default-group: default
+
+permissions:
+  lpinfo: fpp.lpinfo
+  rank: fpp.rank

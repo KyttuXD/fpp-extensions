@@ -1,0 +1,29 @@
+enabled: true
+
+pathfinding:
+  parkour: false
+  break-blocks: false
+  place-blocks: false
+  place-material: DIRT
+
+  arrival-distance: 1.2
+  patrol-arrival-distance: 1.5
+  waypoint-arrival-distance: 0.65
+  sprint-distance: 6.0
+  follow-recalc-distance: 3.5
+  follow-recalc-interval: 100
+  recalc-interval: 60
+
+  stuck-ticks: 5
+  stuck-threshold: 0.04
+
+  break-ticks: 15
+  place-ticks: 5
+
+  max-range: 64
+  max-nodes: 900
+  max-nodes-extended: 1800
+  max-fall: 3
+
+  detour-attempts: 5
+  detour-radius: 16.0

@@ -1,0 +1,4 @@
+enabled: true
+
+permissions:
+  command: fpp.settings

@@ -1,0 +1,19 @@
+enabled: true
+
+permissions:
+  command: fpp.skin
+
+# mode: player - copy/fetch player skins by name.
+# mode: random - use overrides, pool, and the skins folder.
+# mode: none - no custom skin. Bots use default Steve/Alex appearance.
+skin:
+  mode: player
+  guaranteed-skin: true
+  clear-cache-on-reload: true
+  overrides: {}
+  pool: []
+  use-skin-folder: true
+  mineskin:
+    url-upload-enabled: true
+    api-key: ""
+    visibility: public

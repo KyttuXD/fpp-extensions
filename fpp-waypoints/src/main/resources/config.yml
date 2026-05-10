@@ -1,0 +1,8 @@
+enabled: true
+
+patrol:
+  arrival-distance: 1.5
+  random-reshuffle-each-cycle: true
+
+migration:
+  import-core-waypoints: true

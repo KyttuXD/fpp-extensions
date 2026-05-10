@@ -1,0 +1,59 @@
+# Project exclude paths
+/target/
+*/target/
+
+# Build / output
+/build/
+dist/
+
+# Extensions
+velocity-companion/
+bungee-companion/
+
+# Maven
+dependency-reduced-pom.xml
+*.class
+*.log
+
+# IDEs
+/.idea/
+*.iml
+*.iws
+/.project
+/.classpath
+/.settings/
+out/
+
+# Node / frontend
+/node_modules/
+/frontend/node_modules/
+/frontend/.next/
+/frontend/dist/
+/frontend/.vercel/
+.vercel/
+
+# Vercel / serverless
+/.vercel_build_output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.env
+
+# Logs
+logs/
+*.log
+
+# Misc
+*.swp
+*.tmp
+/.idea/
+
+*/AGENTS.md
+*/README.md
+
+# Keep libs (vendor) unless you want to ignore them intentionally
+# /libs/

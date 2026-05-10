@@ -1,0 +1,21 @@
+enabled: true
+
+permissions:
+  command: fpp.swap
+
+swap:
+  enabled: false
+  debug: false
+  max-swapped-out: 0
+  min-online: 0
+  same-name-on-rejoin: true
+  farewell-chat: true
+  greeting-chat: true
+  retry-rejoin: true
+  retry-delay: 60
+  session:
+    min: 60
+    max: 300
+  absence:
+    min: 30
+    max: 120

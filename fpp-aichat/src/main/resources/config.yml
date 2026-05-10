@@ -1,0 +1,27 @@
+enabled: true
+debug: false
+
+personality:
+  default: "default"
+  auto-assign-on-spawn: true
+
+direct-messages:
+  enabled: true
+  max-history: 10
+  cooldown: 3
+
+typing-delay:
+  enabled: true
+  base: 1.0
+  per-char: 0.07
+  max: 5.0
+
+public-chat:
+  enabled: false
+  chance: 0.25
+  max-bots: 1
+  ignore-short: true
+  ai-cooldown: 30
+  delay:
+    min: 2
+    max: 8

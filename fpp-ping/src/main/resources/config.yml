@@ -1,0 +1,28 @@
+enabled: true
+
+random:
+  min: 20
+  max: 200
+
+ping:
+  enabled: false
+  min: 20
+  max: 200
+  variability: 8
+  update-interval: 40
+  latency-effect: true
+  behavior-effect: true
+  max-behavior-skip-ticks: 8
+  spike-chance: 0.04
+  spike-min: 200
+  spike-max: 600
+  join-ramp-ticks: 60
+
+permissions:
+  base: fpp.ping
+  set: fpp.ping.set
+  random: fpp.ping.random
+  bulk: fpp.ping.bulk
+
+messages:
+  prefix: "&8[&bFPP Ping&8]&r "

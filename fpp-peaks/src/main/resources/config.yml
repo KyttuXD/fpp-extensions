@@ -1,0 +1,23 @@
+enabled: true
+
+permissions:
+  command: fpp.peaks
+
+peak-hours:
+  enabled: false
+  timezone: "UTC"
+  stagger-seconds: 30
+  min-online: 0
+  notify-transitions: false
+  schedule:
+    - { start: "06:00", end: "09:00", fraction: 0.30 }
+    - { start: "09:00", end: "18:00", fraction: 0.75 }
+    - { start: "18:00", end: "22:00", fraction: 1.00 }
+    - { start: "22:00", end: "06:00", fraction: 0.05 }
+  day-overrides:
+    SATURDAY:
+      - { start: "10:00", end: "23:00", fraction: 1.00 }
+      - { start: "23:00", end: "10:00", fraction: 0.10 }
+    SUNDAY:
+      - { start: "10:00", end: "22:00", fraction: 0.90 }
+      - { start: "22:00", end: "10:00", fraction: 0.10 }

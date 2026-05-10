@@ -1,0 +1,17 @@
+enabled: true
+
+nametag:
+  # Prevent spawning/renaming workflows from using a real player's active NameTag nick
+  # where the extension can check conflicts.
+  block-nick-conflicts: true
+
+  # After each bot spawns, remove it from NameTag's internal player cache unless
+  # the cache entry contains nick/skin data that should be preserved for the bot.
+  bot-isolation: true
+
+  # When a bot has a NameTag nick set, trigger a full FPP rename so the bot's
+  # Minecraft profile name becomes the plain nick. This is intentionally opt-in.
+  sync-nick-as-rename: false
+
+  # Refresh cached bot display names used by server-list samples and tab display.
+  refresh-display-names: true
