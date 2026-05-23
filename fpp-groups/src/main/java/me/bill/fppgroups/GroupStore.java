@@ -34,21 +34,34 @@ final class GroupStore {
   void load(boolean importCoreGroups) {
     File parent = file.getParentFile();
     if (parent != null && !parent.exists()) parent.mkdirs();
-    if (importCoreGroups && !file.exists()) {
-      File oldFile = new File(plugin.getDataFolder(), "data/bot-groups.yml");
-      if (oldFile.isFile()) {
-        try {
-          Files.copy(oldFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-          plugin.getLogger().info("[FPP-Groups] Imported core bot-groups.yml.");
-        } catch (IOException e) {
-          plugin.getLogger().warning("[FPP-Groups] Failed to import core groups: " + e.getMessage());
+    
+    if (!file.exists()) {
+      if (importCoreGroups) {
+        File oldFile = new File(plugin.getDataFolder(), "data/bot-groups.yml");
+        if (oldFile.isFile()) {
+          try {
+            Files.copy(oldFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            plugin.getLogger().info("[FPP-Groups] Imported core bot-groups.yml.");
+          } catch (IOException e) {
+            plugin.getLogger().warning("[FPP-Groups] Failed to import core groups: " + e.getMessage());
+          }
         }
       }
+      try {
+        if (!file.createNewFile()) {
+          plugin.getLogger().warning("[FPP-Groups] Could not create data file.");
+        }
+      } catch (IOException e) {
+        plugin.getLogger().warning("[FPP-Groups] Failed to create data file: " + e.getMessage());
+      }
     }
+    
     yaml = YamlConfiguration.loadConfiguration(file);
+    plugin.getLogger().info("[FPP-Groups] Loaded bot groups.");
   }
 
   void save() {
+    if (yaml == null || file == null) return;
     try {
       yaml.save(file);
     } catch (IOException e) {

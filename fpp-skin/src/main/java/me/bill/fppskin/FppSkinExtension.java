@@ -152,7 +152,7 @@ public final class FppSkinExtension implements FppExtension {
 
     @Override
     public @NotNull String getUsage() {
-      return "<bot> <username|reset|--url <url>>";
+      return "<bot|--all> <username|reset|--url <url>|--random>";
     }
 
     @Override
@@ -182,6 +182,22 @@ public final class FppSkinExtension implements FppExtension {
         return true;
       }
 
+      if (args.length < 2) {
+        sender.sendMessage(Lang.get("skin-usage"));
+        return true;
+      }
+
+      SkinManager activeSkinManager = skinManager;
+      if (activeSkinManager == null) {
+        sender.sendMessage(Lang.get("skin-failed", "name", args[0]));
+        return true;
+      }
+
+      if (args[0].equalsIgnoreCase("--all")) {
+        handleAll(sender, activeSkinManager, args);
+        return true;
+      }
+
       FakePlayerManager manager = manager();
       FakePlayer bot = manager != null ? manager.getByName(args[0]) : null;
       if (bot == null) {
@@ -191,17 +207,6 @@ public final class FppSkinExtension implements FppExtension {
 
       if (!canControl(sender, bot)) {
         sender.sendMessage(Lang.get("no-permission"));
-        return true;
-      }
-
-      if (args.length < 2) {
-        sender.sendMessage(Lang.get("skin-usage"));
-        return true;
-      }
-
-      SkinManager activeSkinManager = skinManager;
-      if (activeSkinManager == null) {
-        sender.sendMessage(Lang.get("skin-failed", "name", bot.getDisplayName()));
         return true;
       }
 
@@ -254,17 +259,22 @@ public final class FppSkinExtension implements FppExtension {
       FakePlayerManager manager = manager();
       if (args.length == 1) {
         String prefix = args[0].toLowerCase(Locale.ROOT);
-        if (manager == null) return List.of();
-        return manager.getActiveNames().stream()
+        List<String> options = new ArrayList<>();
+        options.add("--all");
+        if (manager != null) {
+          options.addAll(manager.getActiveNames());
+        }
+        return options.stream()
             .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
             .toList();
       }
 
       if (args.length == 2) {
-        String prefix = args[1].toLowerCase(Locale.ROOT);
+        String prefix = args[1].toLowerCase();
         List<String> options = new ArrayList<>();
         options.add("reset");
         options.add("--url");
+        options.add("--random");
         for (Player player : Bukkit.getOnlinePlayers()) {
           if (manager == null || manager.getByUuid(player.getUniqueId()) == null) {
             options.add(player.getName());
@@ -288,6 +298,92 @@ public final class FppSkinExtension implements FppExtension {
       return skinArg.startsWith("http://")
           || skinArg.startsWith("https://")
           || skinArg.startsWith("data:image");
+    }
+
+    private void handleAll(CommandSender sender, SkinManager activeSkinManager, String[] args) {
+      if (args.length < 2) {
+        sender.sendMessage(Lang.get("skin-usage"));
+        return;
+      }
+      FakePlayerManager manager = manager();
+      if (manager == null) {
+        sender.sendMessage(Lang.get("skin-failed", "name", "--all"));
+        return;
+      }
+      String skinArg = args[1];
+      
+      if (skinArg.equalsIgnoreCase("--random")) {
+        handleAllRandom(sender, activeSkinManager, manager);
+        return;
+      }
+      
+      int total = manager.getActivePlayers().size();
+      int skipped = 0;
+      java.util.concurrent.atomic.AtomicInteger count = new java.util.concurrent.atomic.AtomicInteger(0);
+      
+      for (FakePlayer bot : manager.getActivePlayers()) {
+        if (!canControl(sender, bot)) {
+          skipped++;
+          continue;
+        }
+        FppNameTagService nameTagService = api.getService(FppNameTagService.class);
+        if (nameTagService != null
+            && nameTagService.isAvailable()
+            && nameTagService.getSkin(bot.getUuid()) != null) {
+          skipped++;
+          continue;
+        }
+        if (skinArg.equalsIgnoreCase("reset")) {
+          if (activeSkinManager.resetToDefaultSkin(bot)) count.incrementAndGet();
+        } else if (skinArg.equalsIgnoreCase("--url") && args.length >= 3) {
+          String url = args[2];
+          if (url.isBlank()) {
+            skipped++;
+            continue;
+          }
+          activeSkinManager.applySkinByUrl(bot, url)
+              .thenAccept(success -> { if (success) count.incrementAndGet(); });
+        } else if (isUrlSkin(skinArg)) {
+          activeSkinManager.applySkinByUrl(bot, skinArg)
+              .thenAccept(success -> { if (success) count.incrementAndGet(); });
+        } else {
+          activeSkinManager.applySkinByUsername(bot, skinArg)
+              .thenAccept(success -> { if (success) count.incrementAndGet(); });
+        }
+      }
+      
+      int applied = count.get();
+      sender.sendMessage("§aApplied skin to §f" + applied + "§a/" + total + "§a bot(s)§7. (§f" + skipped + "§7 skipped)");
+    }
+
+    private void handleAllRandom(CommandSender sender, SkinManager activeSkinManager, FakePlayerManager manager) {
+      int total = manager.getActivePlayers().size();
+      int skipped = 0;
+      java.util.concurrent.atomic.AtomicInteger count = new java.util.concurrent.atomic.AtomicInteger(0);
+      
+      for (FakePlayer bot : manager.getActivePlayers()) {
+        if (!canControl(sender, bot)) {
+          skipped++;
+          continue;
+        }
+        FppNameTagService nameTagService = api.getService(FppNameTagService.class);
+        if (nameTagService != null
+            && nameTagService.isAvailable()
+            && nameTagService.getSkin(bot.getUuid()) != null) {
+          skipped++;
+          continue;
+        }
+        String randomPoolName = SkinManager.pickRandomPoolName();
+        if (randomPoolName != null && !randomPoolName.isBlank()) {
+          activeSkinManager.applySkinByUsername(bot, randomPoolName)
+              .thenAccept(success -> { if (success) count.incrementAndGet(); });
+        } else {
+          if (activeSkinManager.resetToDefaultSkin(bot)) count.incrementAndGet();
+        }
+      }
+      
+      int applied = count.get();
+      sender.sendMessage("§aApplied random skins to §f" + applied + "§a/" + total + "§a bot(s)§7. (§f" + skipped + "§7 skipped)");
     }
 
     private void sendApplyResult(

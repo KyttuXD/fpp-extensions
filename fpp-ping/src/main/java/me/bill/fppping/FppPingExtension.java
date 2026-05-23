@@ -115,7 +115,7 @@ public final class FppPingExtension implements FppExtension {
 
     @Override
     public @NotNull String getUsage() {
-      return "[<bot>|--count <n>] [--ping <ms>|--random|--reset]";
+      return "[<bot>|--all|--count <n>] [--ping <ms>|--random|--reset]";
     }
 
     @Override
@@ -142,7 +142,7 @@ public final class FppPingExtension implements FppExtension {
       if (parsed.random && !require(sender, perm("random", "fpp.ping.random"))) return true;
       if (parsed.count != null && !require(sender, perm("bulk", "fpp.ping.bulk"))) return true;
 
-      if (parsed.botName != null && parsed.count != null) {
+      if (parsed.botName != null && parsed.count != null && !parsed.isAll) {
         sender.sendMessage(prefix() + ChatColor.RED + "Cannot use a bot name and --count together.");
         return true;
       }
@@ -150,6 +150,16 @@ public final class FppPingExtension implements FppExtension {
       int changes = (parsed.hasPing ? 1 : 0) + (parsed.random ? 1 : 0) + (parsed.reset ? 1 : 0);
       if (changes > 1) {
         sender.sendMessage(prefix() + ChatColor.RED + "Conflicting ping options cannot be used together.");
+        return true;
+      }
+
+      if (parsed.isAll) {
+        List<FppBot> bots = new ArrayList<>(api.getBots());
+        if (bots.isEmpty()) {
+          sender.sendMessage(prefix() + ChatColor.RED + "No bots are currently active.");
+          return true;
+        }
+        handleAll(sender, bots, parsed);
         return true;
       }
 
@@ -194,6 +204,7 @@ public final class FppPingExtension implements FppExtension {
 
       if (args.length == 1) {
         addIfStarts(out, "--count", partial);
+        addIfStarts(out, "--all", partial);
         addBotNames(out, partial);
       } else if (args.length >= 2) {
         addIfStarts(out, "--ping", partial);
@@ -265,12 +276,19 @@ public final class FppPingExtension implements FppExtension {
               return null;
             }
           }
+          case "--all" -> {
+            if (parsed.isAll) {
+              sender.sendMessage(prefix() + ChatColor.RED + "Duplicate option: --all");
+              return null;
+            }
+            parsed.isAll = true;
+          }
           default -> {
             if (arg.startsWith("--")) {
               sender.sendMessage(prefix() + ChatColor.RED + "Unknown option: " + ChatColor.WHITE + args[i]);
               return null;
             }
-            if (parsed.botName != null) {
+            if (parsed.botName != null || parsed.isAll) {
               sender.sendMessage(prefix() + ChatColor.RED + "Usage: /fpp ping " + getUsage());
               return null;
             }
@@ -328,6 +346,56 @@ public final class FppPingExtension implements FppExtension {
                 + ".");
       } else {
         show(sender, bot);
+      }
+    }
+
+    private void handleAll(CommandSender sender, List<FppBot> bots, ParsedArgs parsed) {
+      if (parsed.hasPing) {
+        for (FppBot bot : bots) {
+          api.setBotPing(bot, parsed.ping);
+          api.persistBotSettings(bot);
+        }
+        sender.sendMessage(
+            prefix()
+                + ChatColor.GREEN
+                + "Set ping for "
+                + ChatColor.YELLOW
+                + bots.size()
+                + ChatColor.GREEN
+                + " bot(s) to "
+                + ChatColor.WHITE
+                + parsed.ping
+                + "ms"
+                + ChatColor.GREEN
+                + ".");
+      } else if (parsed.random) {
+        for (FppBot bot : bots) {
+          api.setBotPing(bot, randomPing());
+          api.persistBotSettings(bot);
+        }
+        sender.sendMessage(
+            prefix()
+                + ChatColor.GREEN
+                + "Assigned random pings to "
+                + ChatColor.YELLOW
+                + bots.size()
+                + ChatColor.GREEN
+                + " bot(s).");
+      } else if (parsed.reset) {
+        for (FppBot bot : bots) {
+          api.resetBotPing(bot);
+          api.persistBotSettings(bot);
+        }
+        sender.sendMessage(
+            prefix()
+                + ChatColor.GREEN
+                + "Reset ping for "
+                + ChatColor.YELLOW
+                + bots.size()
+                + ChatColor.GREEN
+                + " bot(s).");
+      } else {
+        for (FppBot bot : bots) show(sender, bot);
       }
     }
 
@@ -425,5 +493,6 @@ public final class FppPingExtension implements FppExtension {
     int ping;
     boolean random;
     boolean reset;
+    boolean isAll;
   }
 }

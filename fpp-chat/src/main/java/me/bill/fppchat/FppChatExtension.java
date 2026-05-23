@@ -55,6 +55,8 @@ public final class FppChatExtension implements FppExtension {
     }
     this.core = fpp;
     saveDefaultConfig();
+    getConfig().options().copyDefaults(true);
+    saveConfig();
     Config.registerExternalConfig("fake-chat", getConfig());
     migrateLegacyBotMessages();
     botMessages = new BotMessageConfig(this);
@@ -64,7 +66,9 @@ public final class FppChatExtension implements FppExtension {
     core.setBotChatAI(chatAI);
     command = new ChatAddonCommand();
     api.registerCommand(command);
-    api.getPlugin().getLogger().info("[FPP-Chat] Enabled.");
+    
+    boolean chatEnabled = getConfig().getBoolean("fake-chat.enabled", true);
+    api.getPlugin().getLogger().info("[FPP-Chat] Enabled (fake-chat.enabled=" + chatEnabled + ").");
   }
 
   @Override
@@ -136,7 +140,8 @@ public final class FppChatExtension implements FppExtension {
     Config.registerExternalConfig("fake-chat", getConfig());
     BotChatAI chatAI = chatAI();
     if (chatAI == null) return;
-    if (Config.fakeChatEnabled()) chatAI.restartLoops();
+    boolean enabled = getConfig().getBoolean("fake-chat.enabled", true);
+    if (enabled) chatAI.restartLoops();
     else chatAI.cancelAll();
   }
 

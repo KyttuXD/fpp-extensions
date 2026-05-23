@@ -132,7 +132,7 @@ public final class FppCommandExtension implements FppExtension {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String[] args) {
       if (!enabled()) {
-        sender.sendMessage("Command extension is disabled.");
+        sender.sendMessage("§cCommand extension is disabled.");
         return true;
       }
       if (!hasCommandPermission(sender)) {
@@ -152,6 +152,12 @@ public final class FppCommandExtension implements FppExtension {
       }
       if (!canControl(sender, bot)) {
         sender.sendMessage(Lang.get("no-permission"));
+        return true;
+      }
+
+      Player playerEntity = bot.getPlayer();
+      if (playerEntity == null || !playerEntity.isOnline()) {
+        sender.sendMessage(Lang.get("cmd-bot-offline", "name", bot.getDisplayName()));
         return true;
       }
 
@@ -259,13 +265,23 @@ public final class FppCommandExtension implements FppExtension {
 
       String command = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
       if (command.startsWith("/")) command = command.substring(1);
-      boolean success = Bukkit.dispatchCommand(player, command);
+      
+      if (command.isBlank()) {
+        sender.sendMessage("§cNo command specified.");
+        return true;
+      }
 
-      if (success) {
-        sender.sendMessage(Lang.get("cmd-executed", "name", bot.getDisplayName(), "cmd", "/" + command));
-        FppLogger.info(sender.getName() + " issued server command as " + bot.getName() + ": /" + command);
-      } else {
-        sender.sendMessage(Lang.get("cmd-failed", "name", bot.getDisplayName(), "cmd", "/" + command));
+      try {
+        boolean success = Bukkit.dispatchCommand(player, command);
+        if (success) {
+          sender.sendMessage(Lang.get("cmd-executed", "name", bot.getDisplayName(), "cmd", "/" + command));
+          FppLogger.info(sender.getName() + " issued server command as " + bot.getName() + ": /" + command);
+        } else {
+          sender.sendMessage(Lang.get("cmd-failed", "name", bot.getDisplayName(), "cmd", "/" + command));
+        }
+      } catch (Exception e) {
+        sender.sendMessage("§cFailed to execute command: " + e.getMessage());
+        core.getLogger().warning("Command execution failed for " + bot.getName() + ": " + e.getMessage());
       }
       return true;
     }

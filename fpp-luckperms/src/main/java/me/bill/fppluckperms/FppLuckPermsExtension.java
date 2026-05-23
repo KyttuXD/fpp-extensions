@@ -106,7 +106,7 @@ public final class FppLuckPermsExtension implements FppExtension, Listener {
     String defaultGroup = defaultGroup();
 
     FppBot apiBot = event.getBot();
-    if (apiBot.hasMetadata("fpp.explicit-uuid-spawn")) return;
+    if (apiBot == null || apiBot.hasMetadata("fpp.explicit-uuid-spawn")) return;
 
     if (defaultGroup == null || defaultGroup.isBlank()) {
       LuckPermsHelper.getStoredPrimaryGroup(apiBot.getUuid())
@@ -125,9 +125,12 @@ public final class FppLuckPermsExtension implements FppExtension, Listener {
           FakePlayerManager manager = manager();
           FakePlayer bot = manager != null ? manager.getByUuid(uuid) : null;
           if (bot == null) return;
-          if (group != null && !group.isBlank()) bot.setLuckpermsGroup(group);
-          manager.refreshDisplayName(bot);
+          if (group != null && !group.isBlank()) {
+            bot.setLuckpermsGroup(group);
+            manager.refreshDisplayName(bot);
+          }
           manager.persistBotSettings(bot);
+          core.getLogger().fine("[FPP-LuckPerms] Set group '" + group + "' for bot " + bot.getName());
         });
   }
 

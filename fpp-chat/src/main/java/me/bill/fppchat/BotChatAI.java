@@ -168,8 +168,15 @@ public final class BotChatAI implements Listener, BotChatController {
     if (!Config.fakeChatEnabled()) {
       cancelPendingReply(botUuid);
       cancelPendingEvent(botUuid);
+      cancelMuteTask(botUuid);
       Integer oldTask = taskIds.remove(botUuid);
       if (oldTask != null) FppScheduler.cancelTask(oldTask);
+      return;
+    }
+
+    FakePlayer fp = manager.getByUuid(botUuid);
+    if (fp == null || !fp.isChatEnabled()) {
+      taskIds.remove(botUuid);
       return;
     }
 
@@ -186,13 +193,12 @@ public final class BotChatAI implements Listener, BotChatController {
         FppScheduler.runSyncLaterWithId(
             plugin,
             () -> {
-              fireChat(botUuid);
-              if (manager.getByUuid(botUuid) != null) {
+              FakePlayer currentFp = manager.getByUuid(botUuid);
+              if (currentFp != null && currentFp.isChatEnabled()) {
+                fireChat(botUuid);
                 scheduleNext(botUuid);
               } else {
                 taskIds.remove(botUuid);
-                messageHistory.remove(botUuid);
-                activityMultipliers.remove(botUuid);
               }
             },
             delay);
@@ -213,15 +219,18 @@ public final class BotChatAI implements Listener, BotChatController {
     if (messages.isEmpty()) return;
 
     String message = pickMessage(botUuid, messages, bot);
+    if (message == null || message.isBlank()) return;
 
     int delayTicks = computePreSendDelay();
     if (delayTicks > 0) {
       FppScheduler.runSyncLater(
           plugin,
           () -> {
-            sendMessage(bot, message, true);
-
-            triggerBotToBotReaction(bot, 0);
+            FakePlayer currentBot = manager.getByUuid(botUuid);
+            if (currentBot != null && currentBot.isChatEnabled()) {
+              sendMessage(currentBot, message, true);
+              triggerBotToBotReaction(currentBot, 0);
+            }
           },
           delayTicks);
     } else {
@@ -305,11 +314,15 @@ public final class BotChatAI implements Listener, BotChatController {
   }
 
   private String pickMessage(UUID botUuid, List<String> pool, FakePlayer bot) {
+    if (pool == null || pool.isEmpty()) return null;
+    
     Deque<String> history = messageHistory.computeIfAbsent(botUuid, k -> new ArrayDeque<>());
     int historySize = Math.max(1, Config.fakeChatHistorySize());
 
-    List<String> available = new ArrayList<>(pool);
-    available.removeAll(history);
+    List<String> available = new ArrayList<>(pool.size());
+    for (String msg : pool) {
+      if (!history.contains(msg)) available.add(msg);
+    }
     if (available.isEmpty()) available = new ArrayList<>(pool);
 
     String raw = available.get(ThreadLocalRandom.current().nextInt(available.size()));
